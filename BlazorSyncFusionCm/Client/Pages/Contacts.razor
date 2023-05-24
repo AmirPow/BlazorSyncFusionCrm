@@ -1,0 +1,36 @@
+﻿@page "/contacts"
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+
+<h3>Contacts</h3>
+
+<SfGrid DataSource="GridData" AllowFiltering="true" Toolbar="@(new List<string>() {"sreach"})">
+    <GridColumns>
+        <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.CheckBox"></GridFilterSettings>
+        <GridColumn Width="60">
+            <Template>
+                @{
+                    var contact = context as Contact;
+                    <SfButton CssClass="e-inherit" IconCss="e-icons e-edit" OnClick="@(()=>EditContact(contact!.Id))">
+                    </SfButton>
+                }
+            </Template>
+        </GridColumn>
+        <GridColumn Field="FirstName" HeaderText="FirstName"></GridColumn>
+        <GridColumn Field="LastName" HeaderText="LastName"></GridColumn>
+        <GridColumn Field="NickName" HeaderText="NickName"></GridColumn>
+        <GridColumn Field="Place" HeaderText="Place"></GridColumn>
+        <GridColumn Field="DateOfBirth" HeaderText="DateOfBirth" Format="yyyy-mm-dd"></GridColumn>
+    </GridColumns>
+</SfGrid>
+
+@code {
+    protected override Task OnInitializedAsync()
+    {
+        Http.GetFromJsonAsync();
+    }
+    void EditContact(int id)
+    {
+        NavigationManager.NavigateTo($"contacts/edit/{id}");
+    } 
+}
