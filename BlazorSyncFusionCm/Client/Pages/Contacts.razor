@@ -5,8 +5,17 @@
 <h3>Contacts</h3>
 
 <SfGrid DataSource="GridData" AllowFiltering="true" Toolbar="@(new List<string>() {"sreach"})">
+    <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.CheckBox"></GridFilterSettings>
     <GridColumns>
-        <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.CheckBox"></GridFilterSettings>
+
+
+
+        <GridColumn Field="FirstName" HeaderText="FirstName"></GridColumn>
+        <GridColumn Field="LastName" HeaderText="LastName"></GridColumn>
+        <GridColumn Field="NickName" HeaderText="NickName"></GridColumn>
+        <GridColumn Field="Place" HeaderText="Place"></GridColumn>
+        <GridColumn Field="DateOfBirth" HeaderText="DateOfBirth" Format="yyyy-mm-dd"></GridColumn>
+
         <GridColumn Width="60">
             <Template>
                 @{
@@ -16,21 +25,84 @@
                 }
             </Template>
         </GridColumn>
-        <GridColumn Field="FirstName" HeaderText="FirstName"></GridColumn>
-        <GridColumn Field="LastName" HeaderText="LastName"></GridColumn>
-        <GridColumn Field="NickName" HeaderText="NickName"></GridColumn>
-        <GridColumn Field="Place" HeaderText="Place"></GridColumn>
-        <GridColumn Field="DateOfBirth" HeaderText="DateOfBirth" Format="yyyy-mm-dd"></GridColumn>
+        <GridColumn Width="60">
+            <Template>
+                @{
+                    var contact = context as Contact;
+                    <SfButton CssClass="e-inherit" IconCss="e-icons e-delete" OnClick="@(()=>DeleteContact(contact!))">
+                    </SfButton>
+                }
+            </Template>
+        </GridColumn>
     </GridColumns>
 </SfGrid>
 
+<p>
+    <SfButton IsPrimary="true" Content="Ctrate New Contact" OnClick="CreateContact">
+
+
+
+    </SfButton>
+</p>
+
+<SfDialog Width="335px" IsModal="true" @bind-Visible="showDeleteDialog">
+    <DialogTemplates>
+        <Header>AreYou Sure ?</Header>
+        <Content>
+            <p>Do You Really Want to Delete @contactToDelete!.NickName </p>
+        </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        <DialogButton Content="Yes" IsPrimary="false" on OnClick="ConfirmDeleteContact"></DialogButton>
+        <DialogButton Content="No" IsPrimary="true" on OnClick="CancelDeleteContact"></DialogButton>
+    </DialogButtons>
+    <DialogAnimationSettings Effect="DialogEffect.Zoom"></DialogAnimationSettings>
+</SfDialog>
+
 @code {
-    protected override Task OnInitializedAsync()
+    Contact? contactToDelete;
+    public List<Contact> GridData { get; set; } = new List<Contact>();
+    bool showDeleteDialog = false;
+    protected override async Task OnInitializedAsync()
     {
-        Http.GetFromJsonAsync();
+        var result = await Http.GetFromJsonAsync<List<Contact>>("api/contacts");
+        if (result is not null)
+            GridData = result;
     }
     void EditContact(int id)
     {
         NavigationManager.NavigateTo($"contacts/edit/{id}");
-    } 
+    }
+    void CreateContact()
+    {
+        NavigationManager.NavigateTo($"contacts/new");
+    }
+
+    void DeleteContact(Contact contact)
+    {
+        contactToDelete = contact;
+        showDeleteDialog = true;
+    }
+    void CancelDeleteContact()
+    {
+        showDeleteDialog = false;
+    }
+
+    async Task ConfirmDeleteContact()
+    {
+        if (contactToDelete is null)
+        {
+            return;
+        }
+        showDeleteDialog = false;
+        var result = await Http.DeleteAsync($"api/contacts/{contactToDelete.Id}");
+        if (result.IsSuccessStatusCode)
+        {
+            var jsonResulte = await result.Content.ReadFromJsonAsync<List<Contact>>();
+            if (jsonResulte is not null)
+            {
+                GridData = jsonResulte;
+            }
+        }
+    }
 }
